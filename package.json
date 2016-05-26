@@ -1,0 +1,7 @@
+{
+  "name": "serandi",
+  "version": "1.0.0",
+  "description": "serand initialization middleware",
+  "main": "index.js",
+  "dependencies": {}
+}
