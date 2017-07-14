@@ -3,5 +3,7 @@
   "version": "1.0.0",
   "description": "serand initialization middleware",
   "main": "index.js",
-  "dependencies": {}
+  "dependencies": {
+    "lodash": "4.17.4"
+  }
 }
