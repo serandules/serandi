@@ -27,46 +27,36 @@ module.exports.locate = function (prefix) {
 };
 
 module.exports.many = function (req, res, next) {
-    res.many = function (o) {
+    res.many = function (o, paging) {
         var data = req.query.data;
-        var paging = data.paging;
-        if (o.length < paging.count) {
-            return res.send(o);
-        }
         var sort = paging.sort;
-        var end = o[o.length - 1];
-        if (!end) {
-            return res.send(o);
-        }
         var pathname = req.baseUrl;
         if (req.path !== '/') {
             pathname += req.path;
         }
-        if (sort._id) {
-            sort.id = sort._id;
-            delete sort._id;
-        }
-        var link = function (rel, direction) {
-            if (!rel) {
+        /*if (sort._id) {
+         sort.id = sort._id;
+         delete sort._id;
+         }*/
+        var link = function (o) {
+            if (!o) {
                 return null;
             }
-            var order;
-            var fields = {};
-            Object.keys(sort).forEach(function (field) {
-                fields[field] = rel[field];
-                if (order) {
-                    return;
-                }
-                order = sort[field];
-            });
-            if (!order) {
-                return null;
+            var sort = o.sort;
+            if (sort && sort._id) {
+                sort.id = sort._id;
+                delete sort._id;
             }
-            var cursor = {};
-            var type = (direction * order === 1) ? 'min' : 'max';
-            cursor[type] = fields;
-            var clone = _.cloneDeep(data);
-            clone.paging.cursor = cursor;
+            var cursor = o.cursor;
+            if (cursor && cursor._id) {
+                cursor.id = cursor._id;
+                delete cursor.id;
+            }
+            var clone = {
+                fields: data.fields,
+                count: data.count,
+                paging: o
+            };
             return url.format({
                 protocol: req.protocol,
                 hostname: req.hostname,
@@ -77,13 +67,16 @@ module.exports.many = function (req, res, next) {
                 }
             });
         };
-        var index = o.length - 1;
-        var last = link(o[0], -1);
-        var next = link(o[index], 1);
-        res.links({
-            last: last,
-            next: next
-        });
+        var last = link(paging.last);
+        var next = link(paging.next);
+        var links = {};
+        if (last) {
+            links.last = last;
+        }
+        if (next) {
+            links.next = next;
+        }
+        res.links(links);
         res.send(o);
     };
     next();
