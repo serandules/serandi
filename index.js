@@ -52,18 +52,15 @@ module.exports.many = function (req, res, next) {
                 cursor.id = cursor._id;
                 delete cursor.id;
             }
-            var clone = {
-                fields: data.fields,
-                count: data.count,
-                paging: o
-            };
+            o.fields = data.fields;
+            o.count = data.count;
             return url.format({
                 protocol: req.protocol,
                 hostname: req.hostname,
                 port: nconf.get('port'),
                 pathname: pathname,
                 query: {
-                    data: JSON.stringify(clone)
+                    data: JSON.stringify(o)
                 }
             });
         };
