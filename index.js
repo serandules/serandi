@@ -6,7 +6,7 @@ var url = require('url');
 var port = nconf.get('port');
 
 module.exports.ctx = function (req, res, next) {
-    req.serand = req.serand || {};
+    req.ctx = req.ctx || {};
     next();
 };
 
