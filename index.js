@@ -3,6 +3,9 @@ var _ = require('lodash');
 var nconf = require('nconf');
 var url = require('url');
 
+var serand = require('serand');
+var errors = require('errors');
+
 var port = nconf.get('port');
 
 module.exports.ctx = function (req, res, next) {
@@ -12,6 +15,9 @@ module.exports.ctx = function (req, res, next) {
 
 module.exports.pond = function (req, res, next) {
     res.pond = function (o) {
+        if (o instanceof Error) {
+            o = errors.serverError();
+        }
         res.status(o.status).send(o.data);
     };
     next();

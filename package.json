@@ -4,6 +4,8 @@
   "description": "serand initialization middleware",
   "main": "index.js",
   "dependencies": {
-    "lodash": "4.17.4"
+    "lodash": "4.17.4",
+    "serand": "serandules/serand#master",
+    "errors": "serandules/errors#master"
   }
 }
