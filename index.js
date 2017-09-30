@@ -6,7 +6,7 @@ var url = require('url');
 var serand = require('serand');
 var errors = require('errors');
 
-var port = nconf.get('port');
+var port = nconf.get('PORT');
 
 module.exports.ctx = function (req, res, next) {
     req.ctx = req.ctx || {};
@@ -63,7 +63,7 @@ module.exports.many = function (req, res, next) {
             return url.format({
                 protocol: req.protocol,
                 hostname: req.hostname,
-                port: nconf.get('port'),
+                port: nconf.get('PORT'),
                 pathname: pathname,
                 query: {
                     data: JSON.stringify(o)
