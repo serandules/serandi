@@ -84,3 +84,13 @@ module.exports.many = function (req, res, next) {
     };
     next();
 };
+
+module.exports.ssl = function (req, res, next) {
+    if (req.secure) {
+        return next();
+    }
+    if (req.method === 'GET') {
+        return res.redirect(301, 'https://' + req.hostname + req.originalUrl);
+    }
+    res.pond(errors.forbidden());
+};
