@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "lodash": "4.17.4",
+    "cors": "2.8.4",
     "serand": "serandules/serand#master",
     "errors": "serandules/errors#master"
   }

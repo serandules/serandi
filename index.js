@@ -1,12 +1,32 @@
 var log = require('logger')('serandi:index');
-var _ = require('lodash');
 var nconf = require('nconf');
+var _ = require('lodash');
 var url = require('url');
+var cors = require('cors');
 
 var serand = require('serand');
 var errors = require('errors');
 
 var port = nconf.get('PORT');
+
+module.exports.cors = cors(function (req, next) {
+  var origin = req.header('Origin') || '';
+  if (/https?:\/\/.*\.serandives\.com$/.test(origin)) {
+    return next(null, {origin: true});
+  }
+  var token = req.token;
+  if (!token) {
+    return next(null, {origin: false});
+  }
+  var cors = token.cors || [];
+  if (cors.indexOf('*') !== -1) {
+    return next(null, {origin: true});
+  }
+  if (cors.indexOf(origin) !== -1) {
+    return next(null, {origin: true});
+  }
+  next(null, {origin: false});
+});
 
 module.exports.ctx = function (req, res, next) {
     req.ctx = req.ctx || {};
