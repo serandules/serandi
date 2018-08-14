@@ -2,31 +2,16 @@ var log = require('logger')('serandi:index');
 var nconf = require('nconf');
 var _ = require('lodash');
 var url = require('url');
-var cors = require('cors');
-
+var request = require('request');
+var utils = require('utils');
 var serand = require('serand');
 var errors = require('errors');
 
 var port = nconf.get('PORT');
 
-module.exports.cors = cors(function (req, next) {
-  var origin = req.header('Origin') || '';
-  if (/https?:\/\/.*\.serandives\.com$/.test(origin)) {
-    return next(null, {origin: true});
-  }
-  var token = req.token;
-  if (!token) {
-    return next(null, {origin: false});
-  }
-  var cors = token.cors || [];
-  if (cors.indexOf('*') !== -1) {
-    return next(null, {origin: true});
-  }
-  if (cors.indexOf(origin) !== -1) {
-    return next(null, {origin: true});
-  }
-  next(null, {origin: false});
-});
+var captchaUri = 'https://www.google.com/recaptcha/api/siteverify';
+
+var captchaSecret = nconf.get('CAPTCHA_SECRET');
 
 module.exports.ctx = function (req, res, next) {
     req.ctx = req.ctx || {};
@@ -83,7 +68,7 @@ module.exports.many = function (req, res, next) {
             return url.format({
                 protocol: req.protocol,
                 hostname: req.hostname,
-                port: nconf.get('PORT'),
+                port: port,
                 pathname: pathname,
                 query: {
                     data: JSON.stringify(o)
@@ -113,4 +98,29 @@ module.exports.ssl = function (req, res, next) {
         return res.redirect(301, 'https://' + req.hostname + req.originalUrl);
     }
     res.pond(errors.forbidden());
+};
+
+module.exports.captcha = function (req, res, next) {
+  var captcha = req.get('X-Captcha');
+  if (!captcha) {
+    return res.pond(errors.forbidden());
+  }
+  request({
+    uri: captchaUri,
+    method: 'POST',
+    form: {
+      secret: captchaSecret,
+      response: captcha,
+      remoteip: req.ip
+    },
+    json: true
+  }, function (e, r, b) {
+    if (e) {
+      return res.pond(errors.serverError());
+    }
+    if (!b.success) {
+      return res.pond(errors.forbidden());
+    }
+    next();
+  });
 };
