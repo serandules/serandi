@@ -7,6 +7,8 @@ var utils = require('utils');
 var serand = require('serand');
 var errors = require('errors');
 
+var Otps = require('model-otps');
+
 var port = nconf.get('PORT');
 
 var captchaUri = 'https://www.google.com/recaptcha/api/siteverify';
@@ -16,6 +18,10 @@ var captchaSecret = nconf.get('CAPTCHA_SECRET');
 module.exports.ctx = function (req, res, next) {
     req.ctx = req.ctx || {};
     next();
+};
+
+module.exports.notFound = function (req, res, next) {
+  res.pond(errors.notFound());
 };
 
 module.exports.pond = function (req, res, next) {
@@ -116,11 +122,37 @@ module.exports.captcha = function (req, res, next) {
     json: true
   }, function (e, r, b) {
     if (e) {
-      return res.pond(errors.serverError());
+      return next(e);
     }
     if (!b.success) {
       return res.pond(errors.forbidden());
     }
     next();
+  });
+};
+
+module.exports.otp = function (req, res, next) {
+  var otp = req.get('X-OTP');
+  if (!otp) {
+    return res.pond(errors.forbidden());
+  }
+  if (!mongutils.objectId(otp)) {
+    return res.pond(errors.forbidden());
+  }
+  var token = req.token;
+  if (!token) {
+    return res.pond(errors.forbidden());
+  }
+  Otps.findOne({
+    user: token.user,
+    value: otp,
+  }, '_id', function (err, otp) {
+    if (err) {
+      return next(err);
+    }
+    if (!otp) {
+      return res.pond(errors.forbidden());
+    }
+    Otps.remove({_id: otp._Id}, next);
   });
 };

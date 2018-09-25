@@ -7,6 +7,7 @@
     "lodash": "4.17.4",
     "request": "2.81.0",
     "serand": "serandules/serand#master",
-    "errors": "serandules/errors#master"
+    "errors": "serandules/errors#master",
+    "model-otps": "serandules/model-otps"
   }
 }
