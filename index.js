@@ -11,7 +11,7 @@ var Otps = require('model-otps');
 
 var port = nconf.get('PORT');
 
-var captchaUri = 'https://www.google.com/recaptcha/api/siteverify';
+var captchaUri = nconf.get('CAPTCHA_URI');
 
 var captchaSecret = nconf.get('CAPTCHA_SECRET');
 
@@ -136,16 +136,14 @@ module.exports.otp = function (req, res, next) {
   if (!otp) {
     return res.pond(errors.forbidden());
   }
-  if (!mongutils.objectId(otp)) {
-    return res.pond(errors.forbidden());
-  }
   var token = req.token;
   if (!token) {
     return res.pond(errors.forbidden());
   }
   Otps.findOne({
     user: token.user,
-    value: otp,
+    name: 'password-update',
+    value: otp
   }, '_id', function (err, otp) {
     if (err) {
       return next(err);
