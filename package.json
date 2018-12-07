@@ -4,10 +4,12 @@
   "description": "serand initialization middleware",
   "main": "index.js",
   "dependencies": {
-    "lodash": "4.17.4",
+    "nconf": "0.10.0",
     "request": "2.81.0",
+    "formidable": "1.1.1",
     "serand": "serandules/serand#master",
     "errors": "serandules/errors#master",
+    "validators": "serandules/validators#master",
     "model-otps": "serandules/model-otps"
   }
 }
