@@ -2,11 +2,14 @@ var log = require('logger')('serandi:index');
 var nconf = require('nconf');
 var url = require('url');
 var request = require('request');
+var async = require('async');
+var utils = require('utils');
 var formidable = require('formidable');
 
 var validators = require('validators');
+var model = validators.model;
 var errors = require('errors');
-var Otps = require('model-otps');
+var Workflows = require('model-workflows');
 
 var Droute = require('./droute');
 
@@ -34,7 +37,9 @@ var validator = function (model, name) {
 };
 
 exports.ctx = function (req, res, next) {
-  req.ctx = req.ctx || {};
+  req.ctx = req.ctx || {
+    overrides: {}
+  };
   next();
 };
 
@@ -58,6 +63,80 @@ exports.locate = function (prefix) {
       return res.location(req.protocol + '://' + req.get('host') + prefix + path);
     };
     next();
+  };
+};
+
+exports.transit = function (o) {
+  return function (req, res, next) {
+    var user = req.user;
+    if (!user) {
+      return next(errors.unauthorized());
+    }
+    var xaction = req.headers['x-action'];
+    if (!xaction || xaction !== 'transit') {
+      return next();
+    }
+    var data = req.body;
+    var action = data.action;
+    if (!action) {
+      return next(errors.unprocessableEntity('\'action\' needs to be specified'));
+    }
+    var id = req.params.id;
+    o.model.findOne({_id: id}, function (err, found) {
+      if (err) {
+        return next(err);
+      }
+      if (!found) {
+        return next(errors.notFound());
+      }
+      var from = found.status;
+      if (!from) {
+        return next(errors.unauthorized());
+      }
+      found = utils.json(found);
+      if (!utils.permitted(utils.json(user), found, action)) {
+        return next(errors.unauthorized())
+      }
+      utils.workflow(o.workflow, function (err, workflow) {
+        if (err) {
+          return next(err);
+        }
+        if (!workflow) {
+          return next(new Error('!workflow'));
+        }
+        var transitions = workflow.transitions;
+        var actions = transitions[from];
+        if (!actions) {
+          return next(errors.unauthorized());
+        }
+        var to = actions[action];
+        if (!to) {
+          return next(errors.unauthorized());
+        }
+        var permit = workflow.permits[to];
+        var usr = found ? found.user : user.id;
+        utils.toPermissions(usr, permit, function (err, permissions) {
+          if (err) {
+            return next(err);
+          }
+          utils.toVisibility(user, permit, function (err, visibility) {
+            if (err) {
+              return next(err);
+            }
+            o.model.findOneAndUpdate({_id: id}, {
+              status: to,
+              permissions: permissions,
+              visibility: visibility
+            }, function (err) {
+              if (err) {
+                return next(err);
+              }
+              res.status(204).end();
+            });
+          });
+        });
+      });
+    });
   };
 };
 
