@@ -2,14 +2,11 @@ var log = require('logger')('serandi:index');
 var nconf = require('nconf');
 var url = require('url');
 var request = require('request');
-var async = require('async');
 var utils = require('utils');
 var formidable = require('formidable');
 
 var validators = require('validators');
-var model = validators.model;
 var errors = require('errors');
-var Workflows = require('model-workflows');
 
 var Droute = require('./droute');
 
