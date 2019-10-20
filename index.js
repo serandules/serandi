@@ -301,3 +301,7 @@ exports.query = function (req, res, next) {
   req.query.data = data;
   next();
 };
+
+exports.cached = function (req, res, next) {
+
+};
