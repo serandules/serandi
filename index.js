@@ -46,7 +46,12 @@ exports.notFound = function (req, res, next) {
 
 exports.pond = function (req, res, next) {
   res.pond = function (o) {
-    if (o instanceof Error) {
+    if (!(o instanceof Error)) {
+      return res.status(o.status).send(o.data);
+    }
+    if (o.status === 413) {
+      o = errors.payloadTooLarge();
+    } else {
       o = errors.serverError();
     }
     res.status(o.status).send(o.data);
