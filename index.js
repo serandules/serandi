@@ -106,7 +106,7 @@ exports.xactions = function (xactions) {
     }
     var xaction = xactions[action];
     if (!xaction) {
-      return next(errors.unprocessableEntity());
+      return next();
     }
     var droute = new Droute();
     xaction(droute);
