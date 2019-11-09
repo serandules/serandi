@@ -152,11 +152,11 @@ exports.many = function (req, res, next) {
         }
       });
     };
-    var last = link(paging.last);
+    var prev = link(paging.prev);
     var next = link(paging.next);
     var links = {};
-    if (last) {
-      links.last = last;
+    if (prev) {
+      links.prev = prev;
     }
     if (next) {
       links.next = next;
