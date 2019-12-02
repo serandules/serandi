@@ -5,7 +5,9 @@ var request = require('request');
 var utils = require('utils');
 var formidable = require('formidable');
 
+var model = require('model');
 var validators = require('validators');
+var vmodel = validators.model;
 var errors = require('errors');
 
 var Droute = require('./droute');
@@ -307,6 +309,44 @@ exports.query = function (req, res, next) {
   next();
 };
 
-exports.cached = function (req, res, next) {
+exports.bumpup = function (mod) {
+  return function (route) {
+    route.use(function (req, res, next) {
+      if (!req.user) {
+        return next(errors.unauthorized());
+      }
+      req.ctx.user = req.user;
+      next();
+    });
 
+    route.use(function (req, res, next) {
+      var ctx = req.ctx;
+      ctx.model = mod;
+      ctx.id = req.params.id;
+      vmodel.updatable(ctx, next);
+    });
+
+    route.use(function (req, res, next) {
+      var ctx = req.ctx;
+      if (!ctx.found) {
+        return next(errors.notFound());
+      }
+      if (!utils.bumpable(ctx.found)) {
+        return next(errors.forbidden());
+      }
+      ctx.data = {
+        updatedAt: new Date()
+      };
+      next();
+    });
+
+    route.use(function (req, res, next) {
+      model.update(req.ctx, function (err, o) {
+        if (err) {
+          return next(err);
+        }
+        res.locate(o.id).status(200).send(o);
+      });
+    });
+  };
 };
