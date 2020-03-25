@@ -323,7 +323,7 @@ exports.bumpup = function (mod) {
       var ctx = req.ctx;
       ctx.model = mod;
       ctx.id = req.params.id;
-      vmodel.updatable(ctx, next);
+      vmodel.bumpable(ctx, next);
     });
 
     route.use(function (req, res, next) {
