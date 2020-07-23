@@ -100,6 +100,13 @@ exports.transit = function (o) {
   };
 };
 
+exports.id = function (req, res, next) {
+  if (!model.objectId(req.params.id)) {
+    return next(errors.notFound());
+  }
+  next();
+};
+
 exports.xactions = function (xactions) {
   return function (req, res, next) {
     var action = req.headers['x-action'];
