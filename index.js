@@ -29,10 +29,31 @@ var validator = function (model, name) {
       req.ctx.streams = req.streams;
       req.ctx.search = req.query.data;
       req.ctx.id = req.params.id;
-      req.ctx.model = model;
       validators.model[name](req.ctx, next);
     });
   };
+};
+
+exports.serve = function () {
+  var args = Array.prototype.slice.call(arguments);
+  var req = args.shift();
+  var res = args.shift();
+  var next = args.shift();
+  var middlewares = args;
+
+  var run = function (middleware, ran) {
+    middleware(req, res, function (err) {
+      if (err) {
+        return ran(err);
+      }
+      if (middlewares.length) {
+        return run(middlewares.shift(), ran);
+      }
+      ran();
+    });
+  }
+
+  run(middlewares.shift(), next);
 };
 
 exports.ctx = function (req, res, next) {
@@ -316,44 +337,41 @@ exports.query = function (req, res, next) {
   next();
 };
 
-exports.bumpup = function (mod) {
-  return function (route) {
-    route.use(function (req, res, next) {
-      if (!req.user) {
-        return next(errors.unauthorized());
-      }
-      req.ctx.user = req.user;
-      next();
-    });
+exports.bumpup = function (route) {
+  route.use(function (req, res, next) {
+    if (!req.user) {
+      return next(errors.unauthorized());
+    }
+    req.ctx.user = req.user;
+    next();
+  });
 
-    route.use(function (req, res, next) {
-      var ctx = req.ctx;
-      ctx.model = mod;
-      ctx.id = req.params.id;
-      vmodel.bumpable(ctx, next);
-    });
+  route.use(function (req, res, next) {
+    var ctx = req.ctx;
+    ctx.id = req.params.id;
+    vmodel.bumpable(ctx, next);
+  });
 
-    route.use(function (req, res, next) {
-      var ctx = req.ctx;
-      if (!ctx.found) {
-        return next(errors.notFound());
-      }
-      if (!utils.bumpable(ctx.found)) {
-        return next(errors.forbidden());
-      }
-      ctx.data = {
-        updatedAt: new Date()
-      };
-      next();
-    });
+  route.use(function (req, res, next) {
+    var ctx = req.ctx;
+    if (!ctx.found) {
+      return next(errors.notFound());
+    }
+    if (!utils.bumpable(ctx.found)) {
+      return next(errors.forbidden());
+    }
+    ctx.data = {
+      updatedAt: new Date()
+    };
+    next();
+  });
 
-    route.use(function (req, res, next) {
-      model.update(req.ctx, function (err, o) {
-        if (err) {
-          return next(err);
-        }
-        res.locate(o.id).status(200).send(o);
-      });
+  route.use(function (req, res, next) {
+    model.update(req.ctx, function (err, o) {
+      if (err) {
+        return next(err);
+      }
+      res.locate(o.id).status(200).send(o);
     });
-  };
+  });
 };
