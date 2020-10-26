@@ -7,10 +7,6 @@
     "nconf": "0.10.0",
     "request": "2.81.0",
     "formidable": "1.1.1",
-    "serand": "serandules/serand#master",
-    "errors": "serandules/errors#master",
-    "utils": "serandules/utils#master",
-    "validators": "serandules/validators#master",
-    "model-otps": "serandules/model-otps"
+    "errors": "serandules/errors#master"
   }
 }
